@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data: blob:; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="description" content="Interactive Standing–Katz Z-factor chart for natural gas: drag, zoom and read Z at any point, apply sour-gas corrections, and get Bg, density, cg and viscosity with every step shown.">
+<meta name="color-scheme" content="light dark">
+<title>Standing–Katz Z-Factor Chart</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <div class="mast-title">
+      <p class="kicker">Natural-gas compressibility · interactive chart</p>
+      <h1>Standing–Katz Z-Factor Chart</h1>
+      <p class="lede">The 1942 chart rebuilt from the Dranchuk–Abou-Kassem equation. Drag the operating point, zoom into the curves, read any point, and get the gas properties with the working shown.</p>
+    </div>
+    <div class="mast-side">
+      <div class="toolbar" role="toolbar" aria-label="Display settings">
+        <div class="seg seg-icons" role="group" aria-label="Theme">
+          <button type="button" data-theme-set="auto" aria-pressed="true" title="Follow the system theme">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="6.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 3.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg><span>Auto</span></button>
+          <button type="button" data-theme-set="light" aria-pressed="false" title="White mode">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="3.6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 1.8v2.6M10 15.6v2.6M1.8 10h2.6M15.6 10h2.6M4.2 4.2l1.8 1.8M14 14l1.8 1.8M4.2 15.8 6 14M14 6l1.8-1.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span>White</span></button>
+          <button type="button" data-theme-set="dark" aria-pressed="false" title="Dark mode (blueprint)">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M15.8 12.6A6.6 6.6 0 0 1 7.4 4.2a6.6 6.6 0 1 0 8.4 8.4z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg><span>Dark</span></button>
+        </div>
+        <button type="button" class="tbtn" id="btnSound" aria-pressed="true" title="Sound effects on/off">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7.5h3l4-3.5v12l-4-3.5H3z" fill="currentColor"/><path class="snd-on" d="M13 7a4 4 0 0 1 0 6M15 5a7 7 0 0 1 0 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path class="snd-off" d="M13 7.5l5 5M18 7.5l-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span id="soundLbl">Sound on</span></button>
+        <button type="button" class="tbtn" id="btnLink" title="Copy a link that opens this exact setup">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M8.5 11.5a3.2 3.2 0 0 0 4.6 0l2.8-2.8a3.2 3.2 0 0 0-4.6-4.6L10 5.4M11.5 8.5a3.2 3.2 0 0 0-4.6 0L4.1 11.3a3.2 3.2 0 0 0 4.6 4.6l1.3-1.3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span>Copy link</span></button>
+      </div>
+      <table class="titleblock" aria-label="Drawing title block">
+        <tr><th>Project</th><td colspan="3">Z-factor of natural gases</td></tr>
+        <tr><th>Method</th><td id="tbMethod">DAK (1975)</td><th>Units</th><td id="tbUnits">Field</td></tr>
+        <tr><th>Drawn by</th><td>K. F. S. Arrabe</td><th>Sheet</th><td>1 of 1</td></tr>
+      </table>
+    </div>
+  </header>
+
+  <div class="bench">
+    <!-- A. Inputs -->
+    <section class="sheet stack" aria-labelledby="hA">
+      <header class="sheet-h"><span class="tag">A</span><h2 id="hA">Inputs</h2></header>
+      <div class="seg wide" role="group" aria-label="Input mode">
+        <button type="button" id="modeGas" aria-pressed="true">Gas &amp; conditions</button>
+        <button type="button" id="modeDirect" aria-pressed="false">P<sub>pr</sub> &amp; T<sub>pr</sub></button>
+      </div>
+
+      <div id="gasInputs" class="stack">
+        <fieldset>
+          <legend>Units</legend>
+          <div class="seg wide" role="group" aria-label="Units">
+            <button type="button" id="unitField" aria-pressed="true">Field (psia, °F)</button>
+            <button type="button" id="unitSI" aria-pressed="false">SI (kPa, °C)</button>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Conditions</legend>
+          <div class="row"><label for="inP">Pressure <span id="uP">psia</span></label><input type="number" id="inP" step="any" min="1"></div>
+          <input type="range" id="rgP" min="15" max="15000" step="5" aria-label="Pressure slider">
+          <div class="row"><label for="inT">Temperature <span id="uT">°F</span></label><input type="number" id="inT" step="any"></div>
+          <input type="range" id="rgT" min="40" max="400" step="1" aria-label="Temperature slider">
+        </fieldset>
+        <fieldset>
+          <legend>Gas</legend>
+          <div class="row"><label for="inG">Specific gravity γ<sub>g</sub> <span>(air = 1)</span></label><input type="number" id="inG" step="0.005" min="0.55" max="2"></div>
+          <input type="range" id="rgG" min="0.55" max="1.6" step="0.005" aria-label="Gas gravity slider">
+          <div class="row single"><label for="inCorr">Pseudo-critical correlation</label></div>
+          <select id="inCorr">
+            <option value="sutton">Sutton (1985)</option>
+            <option value="standingNG">Standing (1977), natural gas</option>
+            <option value="standingCond">Standing (1977), gas condensate</option>
+          </select>
+          <div class="sub">
+            <p class="hint">Non-hydrocarbons, mol %. Corrected with Kay's rule and Wichert–Aziz.</p>
+            <div class="row"><label for="inCO2">CO<sub>2</sub></label><input type="number" id="inCO2" step="0.1" min="0" max="80"></div>
+            <div class="row"><label for="inH2S">H<sub>2</sub>S</label><input type="number" id="inH2S" step="0.1" min="0" max="80"></div>
+            <div class="row"><label for="inN2">N<sub>2</sub></label><input type="number" id="inN2" step="0.1" min="0" max="80"></div>
+          </div>
+        </fieldset>
+      </div>
+
+      <div id="directInputs" class="stack" hidden>
+        <fieldset>
+          <legend>Reduced conditions</legend>
+          <div class="row"><label for="inPpr">P<sub>pr</sub></label><input type="number" id="inPpr" step="0.01" min="0" max="30"></div>
+          <input type="range" id="rgPpr" min="0" max="15" step="0.01" aria-label="Ppr slider">
+          <div class="row"><label for="inTpr">T<sub>pr</sub></label><input type="number" id="inTpr" step="0.01" min="1" max="3"></div>
+          <input type="range" id="rgTpr" min="1.05" max="3" step="0.01" aria-label="Tpr slider">
+          <p class="hint">Read Z straight off the chart. Gas properties need the gas &amp; conditions mode.</p>
+        </fieldset>
+      </div>
+
+      <fieldset>
+        <legend>Z-factor method</legend>
+        <select id="inMethod">
+          <option value="dak">Dranchuk–Abou-Kassem (recommended)</option>
+          <option value="hy">Hall–Yarborough</option>
+          <option value="bb">Brill–Beggs</option>
+          <option value="papay">Papay (explicit)</option>
+        </select>
+        <p class="hint" id="methodNote"></p>
+      </fieldset>
+      <button type="button" class="btn" id="btnReset">Reset to the example</button>
+    </section>
+
+    <!-- B. Chart -->
+    <section class="sheet chartcard" aria-labelledby="hB">
+      <header class="sheet-h"><span class="tag">B</span><h2 id="hB">Chart</h2>
+        <div class="sheet-tools">
+          <button type="button" class="btn" id="btnPlay" title="Animate the pressure falling to atmospheric along this isotherm"><svg viewBox="0 0 20 20" aria-hidden="true"><path id="playIcon" d="M6 4l10 6-10 6z" fill="currentColor"/></svg><span id="playLbl">Deplete</span></button>
+          <button type="button" class="btn" id="btnRestore" hidden>Back to start</button>
+          <button type="button" class="btn" id="btnQuiz" aria-pressed="false" title="Practise reading Z off the chart">Practice</button>
+          <button type="button" class="btn" id="btnPng" title="Save the chart as a PNG image">Save PNG</button>
+        </div>
+      </header>
+      <div class="charttools">
+        <span class="seg" role="group" aria-label="Chart range">
+          <button type="button" data-range="low" aria-pressed="true">P<sub>pr</sub> 0–8</button>
+          <button type="button" data-range="high" aria-pressed="false">7–15</button>
+          <button type="button" data-range="full" aria-pressed="false">0–15</button>
+          <button type="button" data-range="ext" aria-pressed="false">0–30</button>
+        </span>
+        <span class="seg" role="group" aria-label="Zoom">
+          <button type="button" id="zoomOut" aria-label="Zoom out">−</button>
+          <button type="button" id="zoomIn" aria-label="Zoom in">+</button>
+          <button type="button" id="zoomFit" title="Reset the view">Fit</button>
+        </span>
+        <label class="check"><input type="checkbox" id="cbCompare"> Overlay method</label>
+      </div>
+      <div class="plot" id="plot">
+        <canvas id="cv" tabindex="0" role="img" aria-label="Standing–Katz Z-factor chart. Use the arrow keys to move the operating point, plus and minus to zoom, P to pin."></canvas>
+        <div class="tip" id="tip" hidden></div>
+        <div class="toast-in" id="chartToast" hidden></div>
+      </div>
+      <div class="isos">
+        <span class="lbl">Isotherms (T<sub>pr</sub>)</span>
+        <div class="isochips" id="isoChips"></div>
+        <span class="iso-add"><input type="number" id="inAddIso" step="0.01" min="1" max="3" placeholder="e.g. 1.27" aria-label="Add an isotherm at this Tpr"><button type="button" class="btn" id="btnAddIso">Add</button></span>
+      </div>
+      <p class="chartnote"><b>Drag</b> the ringed dot to move the operating point · <b>click</b> to pin a reading · <b>drag</b> empty space to pan · <b>scroll</b> (once the chart is selected) or <b>pinch</b> to zoom · <b>double-click</b> to reset · arrow keys nudge.</p>
+    </section>
+
+    <!-- C. Readout -->
+    <section class="sheet stack readout" aria-labelledby="hC">
+      <header class="sheet-h"><span class="tag">C</span><h2 id="hC">Result</h2></header>
+      <div class="quiz" id="quiz" hidden>
+        <p class="quiz-q" id="quizQ"></p>
+        <div class="quiz-row"><label for="inGuess">Your Z</label><input type="number" id="inGuess" step="0.001" min="0" max="3"><button type="button" class="btn primary" id="btnCheck">Check</button></div>
+        <p class="quiz-fb" id="quizFb" aria-live="polite"></p>
+        <div class="quiz-row">
+          <button type="button" class="btn" id="btnNext">Next point</button>
+          <label class="check"><input type="checkbox" id="cbQuizHelp" checked> Highlight the isotherm</label>
+          <select id="inTol" aria-label="Tolerance"><option value="0.02">±0.02</option><option value="0.01" selected>±0.01</option><option value="0.005">±0.005</option></select>
+        </div>
+        <p class="quiz-score" id="quizScore"></p>
+      </div>
+      <div class="zbig"><span class="k">Z</span><span class="eqs-sign">=</span><span class="v" id="outZ">—</span></div>
+      <div class="chips" id="chips"></div>
+      <dl class="kv" id="outKV"></dl>
+      <div class="pins-head"><h3>Pinned readings</h3><button type="button" class="btn" id="btnPinHere" title="Pin the operating point">Pin this point</button></div>
+      <div class="pins" id="pins"></div>
+      <p class="hint" id="pinsEmpty">Click anywhere on the chart to pin a reading.</p>
+    </section>
+  </div>
+
+  <div class="lower">
+    <div class="stack">
+      <section class="sheet" aria-labelledby="hD">
+        <header class="sheet-h"><span class="tag">D</span><h2 id="hD">Property explorer</h2>
+          <div class="sheet-tools seg" role="tablist" aria-label="Property" id="propTabs"></div>
+        </header>
+        <div class="plot plot-wide" id="plot2">
+          <canvas id="cv2" role="img" aria-label="Gas property against pressure at the reservoir temperature"></canvas>
+          <div class="tip" id="tip2" hidden></div>
+        </div>
+        <p class="hint spaced" id="propNote"></p>
+      </section>
+      <section class="sheet" aria-labelledby="hE">
+        <header class="sheet-h"><span class="tag">E</span><h2 id="hE">Worked solution</h2></header>
+        <div class="steps" id="steps"></div>
+      </section>
+    </div>
+    <div class="stack">
+      <section class="sheet" aria-labelledby="hF">
+        <header class="sheet-h"><span class="tag">F</span><h2 id="hF">Correlation check at this point</h2></header>
+        <div class="tablewrap"><table id="cmp"></table></div>
+        <p class="hint spaced">Ranges are the ones usually quoted for each method. DAK and Hall–Yarborough both reproduce the chart closely; the explicit ones drift outside their range.</p>
+      </section>
+      <section class="sheet" aria-labelledby="isoTitle">
+        <header class="sheet-h"><span class="tag">G</span><h2 id="isoTitle">Isotherm table</h2>
+          <div class="sheet-tools"><span class="toast" id="copyMsg" hidden>Copied</span><button type="button" class="btn" id="btnCopy">Copy as CSV</button></div>
+        </header>
+        <div class="tablewrap tall"><table id="iso"></table></div>
+        <textarea id="csvFallback" hidden aria-label="CSV text"></textarea>
+      </section>
+      <section class="sheet" aria-labelledby="hH">
+        <header class="sheet-h"><span class="tag">H</span><h2 id="hH">Sources</h2></header>
+        <ol class="refs">
+          <li>Standing, M.B. &amp; Katz, D.L. (1942). Density of natural gases. <i>Trans. AIME</i> 146, 140–149.</li>
+          <li>Dranchuk, P.M. &amp; Abou-Kassem, J.H. (1975). Calculation of Z factors for natural gases using equations of state. <i>J. Can. Pet. Tech.</i> 14(3).</li>
+          <li>Hall, K.R. &amp; Yarborough, L. (1973). A new equation of state for Z-factor calculations. <i>Oil &amp; Gas J.</i></li>
+          <li>Brill, J.P. &amp; Beggs, H.D. (1974). <i>Two-Phase Flow in Pipes</i>. University of Tulsa.</li>
+          <li>Papay, J. (1968). A termelési technológiai paraméterek változása a gáztelepek művelése során. <i>OGIL Műszaki Tudományos Közlemények</i>, Budapest, 267–273.</li>
+          <li>Sutton, R.P. (1985). Compressibility factors for high-molecular-weight reservoir gases. <i>SPE 14265</i>.</li>
+          <li>Standing, M.B. (1977). <i>Volumetric and Phase Behavior of Oil Field Hydrocarbon Systems</i>. SPE.</li>
+          <li>Wichert, E. &amp; Aziz, K. (1972). Calculate Z's for sour gases. <i>Hydrocarbon Processing</i> 51(5).</li>
+          <li>Lee, A.L., Gonzalez, M.H. &amp; Eakin, B.E. (1966). The viscosity of natural gases. <i>JPT</i> 18(8).</li>
+        </ol>
+      </section>
+    </div>
+  </div>
+  <footer class="foot">
+    <span>© 2026 Kendrew Flor S. Arrabe · MIT License</span>
+    <span>For study and screening. Check critical numbers against lab PVT data.</span>
+    <a href="https://github.com/KendrewFlor/standing-katz-chart" rel="noopener">Source on GitHub</a>
+  </footer>
+</div>
+<script src="js/zmath.js"></script>
+<script src="js/zgas.js"></script>
+<script src="js/sound.js"></script>
+<script src="js/explorer.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
