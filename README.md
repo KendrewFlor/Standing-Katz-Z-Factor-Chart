@@ -2,8 +2,6 @@
 
 An interactive, calculation-backed version of the Standing–Katz natural-gas compressibility chart, for petroleum engineering coursework and quick reservoir-engineering checks.
 
-▶ **Open it:** https://kendrewflor.github.io/standing-katz-chart/
-
 ![The chart in white mode with an operating point, a pinned reading and the hover readout](docs/screenshot.png)
 
 ## What it does
